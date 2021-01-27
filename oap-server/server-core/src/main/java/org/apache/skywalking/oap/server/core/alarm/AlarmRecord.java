@@ -18,8 +18,6 @@
 
 package org.apache.skywalking.oap.server.core.alarm;
 
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.skywalking.oap.server.core.Const;
@@ -30,6 +28,9 @@ import org.apache.skywalking.oap.server.core.source.DefaultScopeDefine;
 import org.apache.skywalking.oap.server.core.source.ScopeDeclaration;
 import org.apache.skywalking.oap.server.core.storage.StorageBuilder;
 import org.apache.skywalking.oap.server.core.storage.annotation.Column;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.apache.skywalking.oap.server.core.source.DefaultScopeDefine.ALARM;
 
@@ -46,24 +47,27 @@ public class AlarmRecord extends Record {
     public static final String ID1 = "id1";
     public static final String START_TIME = "start_time";
     public static final String ALARM_MESSAGE = "alarm_message";
+    public static final String RULE_NAME = "rule_name";
 
     @Override
     public String id() {
-        return getTimeBucket() + Const.ID_SPLIT + scope + Const.ID_SPLIT + id0 + Const.ID_SPLIT + id1;
+        return getTimeBucket() + Const.ID_CONNECTOR + ruleName + Const.ID_CONNECTOR + id0 + Const.ID_CONNECTOR + id1;
     }
 
     @Column(columnName = SCOPE)
     private int scope;
-    @Column(columnName = NAME)
+    @Column(columnName = NAME, storageOnly = true)
     private String name;
-    @Column(columnName = ID0)
-    private int id0;
-    @Column(columnName = ID1)
-    private int id1;
+    @Column(columnName = ID0, storageOnly = true)
+    private String id0;
+    @Column(columnName = ID1, storageOnly = true)
+    private String id1;
     @Column(columnName = START_TIME)
     private long startTime;
     @Column(columnName = ALARM_MESSAGE, matchQuery = true)
     private String alarmMessage;
+    @Column(columnName = RULE_NAME)
+    private String ruleName;
 
     public static class Builder implements StorageBuilder<AlarmRecord> {
 
@@ -77,6 +81,7 @@ public class AlarmRecord extends Record {
             map.put(ALARM_MESSAGE, storageData.getAlarmMessage());
             map.put(START_TIME, storageData.getStartTime());
             map.put(TIME_BUCKET, storageData.getTimeBucket());
+            map.put(RULE_NAME, storageData.getRuleName());
             return map;
         }
 
@@ -85,11 +90,12 @@ public class AlarmRecord extends Record {
             AlarmRecord record = new AlarmRecord();
             record.setScope(((Number) dbMap.get(SCOPE)).intValue());
             record.setName((String) dbMap.get(NAME));
-            record.setId0(((Number) dbMap.get(ID0)).intValue());
-            record.setId1(((Number) dbMap.get(ID1)).intValue());
+            record.setId0((String) dbMap.get(ID0));
+            record.setId1((String) dbMap.get(ID1));
             record.setAlarmMessage((String) dbMap.get(ALARM_MESSAGE));
             record.setStartTime(((Number) dbMap.get(START_TIME)).longValue());
             record.setTimeBucket(((Number) dbMap.get(TIME_BUCKET)).longValue());
+            record.setRuleName((String) dbMap.get(RULE_NAME));
             return record;
         }
     }

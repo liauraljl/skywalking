@@ -18,19 +18,21 @@
 
 package org.apache.skywalking.oap.server.core.analysis.metrics;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.skywalking.oap.server.core.analysis.TimeBucket;
 import org.apache.skywalking.oap.server.core.remote.data.StreamData;
 import org.apache.skywalking.oap.server.core.storage.StorageData;
 import org.apache.skywalking.oap.server.core.storage.annotation.Column;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 /**
  * Metrics represents the statistic data, which analysis by OAL script or hard code. It has the lifecycle controlled by
  * TTL(time to live).
  */
+@EqualsAndHashCode(of = {
+    "timeBucket"
+})
 public abstract class Metrics extends StreamData implements StorageData {
 
     public static final String TIME_BUCKET = "time_bucket";
@@ -77,13 +79,6 @@ public abstract class Metrics extends StreamData implements StorageData {
     public abstract Metrics toDay();
 
     /**
-     * Downsampling the metrics to month precision.
-     *
-     * @return the metrics in month precision in the clone mode.
-     */
-    public abstract Metrics toMonth();
-
-    /**
      * Extend the {@link #survivalTime}
      *
      * @param value to extend
@@ -110,18 +105,6 @@ public abstract class Metrics extends StreamData implements StorageData {
         }
     }
 
-    public long toTimeBucketInMonth() {
-        if (isMinuteBucket()) {
-            return timeBucket / 1000000;
-        } else if (isHourBucket()) {
-            return timeBucket / 10000;
-        } else if (isDayBucket()) {
-            return timeBucket / 100;
-        } else {
-            throw new IllegalStateException("Current time bucket is not in minute dimensionality");
-        }
-    }
-
     /**
      * Always get the duration for this time bucket in minute.
      */
@@ -132,15 +115,8 @@ public abstract class Metrics extends StreamData implements StorageData {
             return 60;
         } else if (isDayBucket()) {
             return 24 * 60;
-        } else {
-            /*
-             * In month time bucket status.
-             * Usually after {@link #toTimeBucketInMonth()} called.
-             */
-            DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyyMM");
-            int dayOfMonth = formatter.parseLocalDate(timeBucket + "").getDayOfMonth();
-            return dayOfMonth * 24 * 60;
         }
+        throw new IllegalStateException("Time bucket (" + timeBucket + ") can't be recognized.");
     }
 
     private boolean isMinuteBucket() {

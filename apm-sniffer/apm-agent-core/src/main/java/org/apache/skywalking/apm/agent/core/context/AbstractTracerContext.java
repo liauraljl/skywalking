@@ -60,7 +60,21 @@ public interface AbstractTracerContext {
      *
      * @return the string represents the id.
      */
-    String getReadableGlobalTraceId();
+    String getReadablePrimaryTraceId();
+
+    /**
+     * Get the current segment id, if needEnhance. How to build, depends on the implementation.
+     *
+     * @return the string represents the id.
+     */
+    String getSegmentId();
+
+    /**
+     * Get the active span id, if needEnhance. How to build, depends on the implementation.
+     *
+     * @return the string represents the id.
+     */
+    int getSpanId();
 
     /**
      * Create an entry span
